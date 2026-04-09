@@ -1,6 +1,7 @@
 # Speech & Emotion Recognition
 
 ### Follow the instruction below
+- Install LMstudio, check [here](https://lmstudio.ai/docs/python)
 - brew install python@3.13
 - create venv - python3.13 -m venv srVenv313
 - activate venv - source srVenv313/bin/actiavte
