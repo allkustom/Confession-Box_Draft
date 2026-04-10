@@ -50,7 +50,7 @@ recognizer.dynamic_energy_adjustment_ratio = 1.5
 # Silence time between words and detect the speech is done
 # Loewr -> cut the words really fast
 # Higher -> cut the words slowly
-recognizer.pause_threshold = 0.8
+recognizer.pause_threshold = 1.5
 noise_duration = 0.5
 
 # rate = engine.getProperty('rate')
@@ -111,6 +111,8 @@ while running:
     cmd = input("Enter cmd: ").strip().lower()
     
     if cmd == "on":
+        engine.say("Tell me about the emotional thing happened today")
+        engine.runAndWait()
         listening =True
         print("Start listening")
     elif cmd == "off":
@@ -131,8 +133,8 @@ while running:
         listening = False
         lms_result = lms_model.respond(last_text + "/" + emotion_prompt_1 + emotion_list)
         print(lms_result)
-        # engine.say(str("I can feel you are " + lms_result))
-        engine.say(str(lms_result))
+        engine.say("I can feel you are " + str(lms_result))
+        # engine.say(str(lms_result))
         engine.runAndWait()
 
 
