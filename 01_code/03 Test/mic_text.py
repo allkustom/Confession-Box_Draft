@@ -2,12 +2,9 @@ import threading as th
 import speech_recognition as sr
 import pyttsx3
 import json
-import random
 import lmstudio as lms
 
 lms_model = lms.llm("qwen/qwen3-4b-2507")
-
-
 
 
 running = True
