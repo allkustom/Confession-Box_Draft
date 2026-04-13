@@ -148,9 +148,13 @@ def sr_toggle():
     global listening
     listening = not listening
     if listening:
-        print("Confession Start")
+        print("-----------------------")
+        print("Confession Record Start")
+        print("-----------------------")
     else:
-        print("Confession End")
+        print("-----------------------")
+        print("Confession Record End")
+        print("-----------------------")
 
 
 def sr_load():
@@ -248,14 +252,14 @@ def read_serial():
                 # Save confession data
                 sr_save()
                 # Sequence End
-                seq_reset()                
+                seq_reset()
             elif readSer == "doorclose":
                 seq_start_trigger("door")
             elif readSer == "sit":
                 seq_start_trigger("sit")
             elif readSer == "stand":
                 userSit = False
-                print("User Stand")
+                # print("User Stand")
             
             if not waiting:                
                 if readSer == "interone":
