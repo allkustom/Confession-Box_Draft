@@ -22,5 +22,13 @@
     {
         "user": 5,
         "speech": "there's a dish of trader joe's orange chicken that i haven't cleaned for my room in 3 days bear song"
+    },
+    {
+        "user": 6,
+        "speech": "i couldn't have perfect breakfast this morning"
+    },
+    {
+        "user": 7,
+        "speech": "i didn't eat food today. not eating"
     }
 ]
