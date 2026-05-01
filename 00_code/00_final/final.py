@@ -49,8 +49,11 @@ if use == None:
 ser = serial.Serial(use, baudrate, timeout=0.1)
 time.sleep(1)
 
+
 lms_model = lms.llm("qwen/qwen3-4b-2507")
 # lms_model = lms.llm("gemma-4-26b-a4b-it")
+
+
 
 mic_list = sr.Microphone.list_microphone_names()
 print("Mic List: ")
