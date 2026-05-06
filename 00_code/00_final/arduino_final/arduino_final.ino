@@ -1,26 +1,30 @@
-// Interaction button Pin
-// Button No.1(Record Confess) - Pin D2
-// Button No.2(Hear Confess) - Pin D3
+// # Limit switch dirtection and Pin
+// Door - 1/2(Com/Up) - Pin D2
+// Chair - 1/3(Com/Down) - Pin D3
 
-// Limit switch dirtection and Pin
-// Door - 1/2(Com/Up) - Pin D4
-// Chair - 1/3(Com/Down) - Pin D5
+// Interaction button Pin - Pin D4
+// Button LED - D5
 
-// Button LED - 6,7
-// Relay switch - 8
+// Relay switch - D6
 
-const int ledCount = 2;
-const int led[ledCount] = {6,7};
 
-const int buttonCount = 4;
-const int button[buttonCount] = {2,3,4,5};
-const int relaySwitch = 8;
+const int buttonCount = 3;
+const int button[buttonCount] = {2,3,4};
+
+const int ledCount = 1;
+const int led[ledCount] = {5};
+
+const int relaySwitch = 6;
 bool buttonState[buttonCount];
 bool lastButtonState[buttonCount];
 unsigned long lastDebounceTime[buttonCount];
 unsigned long debounceDelay = 50;
 
 String msg;
+
+bool isBlinking = false;
+long previousBlinkTime = 0;
+const long blinkInterval = 1000;
 
 void setup() {
   Serial.begin(115200);
@@ -33,13 +37,29 @@ void setup() {
     buttonState[i] = HIGH;
     lastButtonState[i] = HIGH;
     lastDebounceTime[i] = 0;
-    pinMode(led[i], OUTPUT);
+    
+    if (i < ledCount) {
+      pinMode(led[i], OUTPUT);
+    }
   }
 }
 
 void loop() {
   readSerial();
   readButton();
+  ledBlink();
+}
+
+void ledBlink(){
+  if(isBlinking){
+    long currentMillis = millis();
+    if(currentMillis - previousBlinkTime >= blinkInterval){
+      previousBlinkTime = currentMillis;
+
+      int currentLedState = digitalRead(led[0]);
+      digitalWrite(led[0],!currentLedState);
+    }
+  }
 }
 
 void readSerial(){
@@ -59,22 +79,26 @@ void readSerial(){
         if(text == "msg"){
           Serial.println("RESPOND");
         }
-        if(text == "ledlon"){
+
+        if(text == "ledDefault"){
           ledControl(0, true);
-          
+          isBlinking = false;
         }
-        if(text == "ledloff"){
+        if(text == "ledBlink"){
+          isBlinking = true;
+        }
+        if(text == "ledOff"){
           ledControl(0, false);
-          
+          isBlinking = false;          
         }
-        if(text == "ledron"){
-          ledControl(1, true);
+        // if(text == "ledron"){
+        //   ledControl(1, true);
           
-        }
-        if(text == "ledroff"){
-          ledControl(1, false);
+        // }
+        // if(text == "ledroff"){
+        //   ledControl(1, false);
           
-        }
+        // }
         if(text == "lighton"){
           digitalWrite(relaySwitch, HIGH);          
         }
@@ -116,20 +140,20 @@ void readButton() {
 }
 
 void sendSerial(bool active, int index){
-  if(active){
-    if (index == 0) Serial.println("InterOne");
-    else if (index == 1) Serial.println("InterTwo");
-    ledControl(index, true);
-  }else{
-    if(index < 2){
-      ledControl(index, false);
+  // if (index == 0) Serial.println(active ? "DoorClose" : "DoorOpen");
+  if (index == 0) Serial.println(active ? "DoorOpen" : "DoorClose");
+  else if (index == 1) Serial.println(active ? "Sit" : "Stand");
+
+  if (index == 2){
+    if(active){
+      Serial.println("InterOne");
+      // ledControl(0, true);
+    }else{
+      // ledControl(0, false);
     }
   }
 
 
-  // if (index == 2) Serial.println(active ? "DoorClose" : "DoorOpen");
-  if (index == 2) Serial.println(active ? "DoorOpen" : "DoorClose");
-  else if (index == 3) Serial.println(active ? "Sit" : "Stand");
 }
 
 void ledControl(int index, bool activate){

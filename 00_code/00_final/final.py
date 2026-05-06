@@ -1,7 +1,5 @@
 import threading as th
 import speech_recognition as sr
-import pyttsx3
-import subprocess
 import json
 import lmstudio as lms
 import serial
@@ -11,19 +9,23 @@ import random
 import queue
 
 import os
-import sys
 import requests
 import wave
 import numpy as np
 import sounddevice as sd
+import soundfile as sf
 import argparse
 import asyncio
 from pythonosc import udp_client
 
 oscClient = udp_client.SimpleUDPClient("127.0.01", 8000)
-# oscClient.send_message("/bool", True)
+music_volume_default  = 1.0
+music_volume_mid = 0.5
+music_volume_min = 0.3
+
 oscClient.send_message("/ghost", 1)
 oscClient.send_message("/musicTrig", False)
+
 
 
 baudrate = 115200
@@ -54,12 +56,39 @@ lms_model = lms.llm("qwen/qwen3-4b-2507")
 # lms_model = lms.llm("gemma-4-26b-a4b-it")
 
 
+speaker_list = sd.query_devices()
+output_speakers = []
+
+print("Speaker List: ")
+
+for i, name in enumerate(speaker_list):
+    if name['max_output_channels'] > 0:
+        output_speakers.append((i, name['name']))
+        print(f"[{i}] {name['name']}")
+speaker_index = int(input("Selecet Speaker Index: ").strip())    
+
+audio_file_folder = "0 audio source"
+audio_file_list = [
+    "0 intro.wav",
+    "1 outro.wav",
+    "2 QHappy.wav",
+    "3 QSad.wav",
+    "4 QFear.wav",
+    "5 QDisgust.wav",
+    "6 QSurprise.wav",
+    "7 QAnger.wav"
+]
+
+
 
 mic_list = sr.Microphone.list_microphone_names()
 print("Mic List: ")
 for i, name in enumerate(mic_list):
     print(f"[{i}] {name}")
 mic_index = int(input("Select Mic Index: ").strip())
+
+
+    
 
 # LM Studio API settings
 API_URL = "http://127.0.0.1:1234/v1/completions"
@@ -68,7 +97,7 @@ HEADERS = {
 }
 
 # Model parameters
-MAX_TOKENS = 2500
+MAX_TOKENS = 10000
 TEMPERATURE = 0.7
 # TEMPERATURE = random.uniform(0.8, 1.5)
 TOP_P = 0.9
@@ -102,7 +131,7 @@ last_text = ""
 # total_text = ""
 # emotion_prompt_1 = "Tell me a single word that describe the emotion of what I said. Based on the following emotion list"
 emotion_prompt_1 = "Choose one emtion from the following emotion list based on what I just said. (Answer with just the selected emotion in one word)"
-emotion_list = "happy / sad / fear / disgust / surprise / anger"
+# emotion_list = "happy / sad / fear / disgust / surprise / anger"
 
 
 # If want to put variable in this pormpt, use 'f' and {}
@@ -186,6 +215,9 @@ speech_data = {
     "speech": ""
 }
 file_name = "speech_data.json"
+speech_random_excuted = []
+emotion_list = ["happy", "sad", "fear", "disgust", "surprise", "anger"]
+selected_emotion = ""
 
 # speech_data["user"] = input("Enter user name: ")
 
@@ -228,46 +260,40 @@ def seq_start_trigger(case):
 
 
 def seq_start():
-    global oscClient
+    global oscClient, selected_emotion, emotion_list
     write_serial("lightoff")
-    time.sleep(2)
-    write_serial("ledlon")
-    write_serial("ledron")
+    time.sleep(3)
+    selected_emotion = random.choice(emotion_list)
+    
 
     
 
     # TD Pepper's ghost control
     # Turn on the visual and reset the variables
-    oscClient.send_message("/ghost", 0)
+    # oscClient.send_message("/ghost", 0)
     oscClient.send_message("/musicTrig", True)
-    oscClient.send_message("/volume", 0.1)
+    oscClient.send_message("/volume", music_volume_mid)
     
-    tts_speak_instant("Disclaimer! Your confession will be recorded but your voice will be altered. Your identity will remain anonymous. When done, to stop recording, hit the left button again.")
+    # tts_speak_instant("Disclaimer! Your confession will be recorded but your voice will be altered. Your identity will remain anonymous. When done, to stop recording, hit the left button again.")
 
-
-    tts_speak_instant("Hey, this is a sensory box. In it, we want you to reflect and share what has recently been on your mind. In this box we will take note of responses, but not share any personal information.")
-    # tts_speak_instant("Hey, this is a sensory box.")
-    # tts_speak_instant("In it, we want you to reflect and share what has recently been on your mind.")
-    # tts_speak_instant("In this box we will take note of responses, but not share any personal information.")
-
-
-    
-    tts_speak_instant("If you would like to share a confession of your own, press the left button.") 
-    write_serial("ledloff")
-    write_serial("ledroff")
-    write_serial("ledlon")
-    tts_speak_instant("If you would like to hear a previous confession, press the right button.")
-    write_serial("ledloff")
-    write_serial("ledron")
-    
+    sr_random_speech()
+    time.sleep(5)
+    write_serial("ledDefault")
+    audio_play(0)
     time.sleep(2)
-    write_serial("ledroff")
-    oscClient.send_message("/musicTrig", True)
-    oscClient.send_message("/volume", 0.3)
+    oscClient.send_message("/volume", music_volume_min)
+    target_audio_index = emotion_list.index(selected_emotion) + 2
+    audio_play(target_audio_index)
+    time.sleep(1)
+    oscClient.send_message("/volume", music_volume_default)
+
+    
+
+    
     
     
 def seq_reset():
-    global listening, last_text, waiting, doorClosed, userSit, oscClient, DEFAULT_VOICE
+    global listening, last_text, waiting, doorClosed, userSit, oscClient, DEFAULT_VOICE, speech_random_excuted, selected_emotion, speech_data
 
 
     # Save confession data
@@ -281,51 +307,61 @@ def seq_reset():
     print("On waiting")
     listening = False
     last_text= ""
-    speech_data["speech"] = ""
+    speech_data = {"user": 0, "speech": ""}
     waiting = True
     doorClosed = False
     userSit = False
+    speech_random_excuted = []
+    selected_emotion = ""
     # DEFAULT_VOICE = random.choice(AVAILABLE_VOICES)
 
 def sr_toggle():
-    global listening, lms_result,confession_prompt_1 , last_text, lms_model, speech_data
+    global listening, lms_result,confession_prompt_1 , last_text, lms_model, speech_data, oscClient
     
-    if speech_data["speech"] == "" and not listening:
-            oscClient.send_message("/volume", 0.1)
-            # tts_speak_instant("Disclaimer! Your confession will be recorded but your voice will be altered. Your identity will remain anonymous. When done, to stop recording, hit the left button again.")
-            oscClient.send_message("/musicTrig", False)
-            # tts_speak_instant("Disclaimer!")
-            # tts_speak_instant("Your confession will be recorded but your voice will be altered. Your identity will remain anonymous.")
-            # tts_speak_instant("When done, to stop recording, hit the left button again.")
+    # if speech_data["speech"] == "" and not listening:
+    #         oscClient.send_message("/volume", 0.1)
+    #         # tts_speak_instant("Disclaimer! Your confession will be recorded but your voice will be altered. Your identity will remain anonymous. When done, to stop recording, hit the left button again.")
+    #         oscClient.send_message("/musicTrig", False)
+    #         # tts_speak_instant("Disclaimer!")
+    #         # tts_speak_instant("Your confession will be recorded but your voice will be altered. Your identity will remain anonymous.")
+    #         # tts_speak_instant("When done, to stop recording, hit the left button again.")
     listening = not listening
 
     if listening:
-        oscClient.send_message("/musicTrig", False)
-        write_serial("ledlon")
+        # oscClient.send_message("/musicTrig", False)
+        oscClient.send_message("/volume", music_volume_min)
+        write_serial("ledBlink")
         print("-----------------------")
         print("Confession Record Start")
         print("-----------------------")
     else:
-        write_serial("ledloff")
+        write_serial("ledDefault")
+        # write_serial("ledloff")
         print("-----------------------")
         print("Confession Record End")
         print("-----------------------")
-        lms_result = lms_model.respond(speech_data["speech"] + "/" + confession_prompt_1)
-        result_split = lms_result.content.strip().split("///")
-        # result_split = str(lms_result).strip().split("///")
-
-        if len(result_split) >= 2:
-            score = int(result_split[0].strip())
-            message = result_split[1].strip()
-            print(f"AI Score: {score}")
-            print(f"AI Message: {message}")
-            
-            tts_speak_instant(message)
-        else:
-            print(f"AI answered in a wrong structure: {lms_result}")
-        
+        time.sleep(3)
+        oscClient.send_message("/volume", music_volume_mid)
+        audio_play(1)
+        time.sleep(1)
         oscClient.send_message("/musicTrig", True)
-        oscClient.send_message("/volume", 0.3)
+        oscClient.send_message("/volume", music_volume_default)
+        # lms_result = lms_model.respond(speech_data["speech"] + "/" + confession_prompt_1)
+        # result_split = lms_result.content.strip().split("///")
+        # # result_split = str(lms_result).strip().split("///")
+
+        # if len(result_split) >= 2:
+        #     score = int(result_split[0].strip())
+        #     message = result_split[1].strip()
+        #     print(f"AI Score: {score}")
+        #     print(f"AI Message: {message}")
+            
+        #     tts_speak_instant(message)
+        # else:
+        #     print(f"AI answered in a wrong structure: {lms_result}")
+        
+        # oscClient.send_message("/musicTrig", True)
+        # oscClient.send_message("/volume", 0.3)
         
         # Send test to AI and get response
         
@@ -333,61 +369,75 @@ def sr_toggle():
 
 
 def sr_load():
-    global file_name
+    global file_name, emotion_list
+    
+    default_data = {emotion: [] for emotion in emotion_list}
+    
     try:
         with open(file_name, "r", encoding="utf-8") as f:
             data = json.load(f)
             # print("Load JSON:")
             # print(data)
 
-            if not isinstance(data, list):
-                data = [data]
+            if not isinstance(data, dict):
+                # data = [data]
+                return default_data
 
             return data
 
     except FileNotFoundError:
         print("No JSON")
-        return []
+        return default_data
 
     except json.JSONDecodeError:
         print("Wrong JSON")
-        return []
+        return default_data
 
 
 
 def sr_random_speech():
-    global oscClient
+    global oscClient, speech_random_excuted, selected_emotion
     
-    data = sr_load()
+    full_data = sr_load()
+    
+    if not selected_emotion or selected_emotion not in full_data:
+        print("Invalid selected_emotion")
+        return None
+        
+    data = full_data[selected_emotion]
     
     if not data:
         print("No speech to play")
-        # tts_speak_queue("There isn't any confession")
         return None
-    random_speech = random.choice(data).get("speech", "").strip()
+
+    all_indices = set(range(len(data)))
+    executed_indices = set(speech_random_excuted)
+    remaining_indices = list(all_indices - executed_indices)
+    
+    if not remaining_indices:
+        speech_random_excuted.clear()
+        remaining_indices = list(all_indices)
+    
+    random_number = random.choice(remaining_indices)
+    speech_random_excuted.append(random_number)
+    random_speech = data[random_number].get("speech", "").strip()
+    
     if not random_speech:
-        # print("Random speech is empty")
         return
     
-    oscClient.send_message("/musicTrig", False)
-    write_serial("ledron")
-    tts_speak_instant("This is someone else's confession.")
-    time.sleep(2)
-    if random_speech and random_speech.strip():
-        random_speech_split = random_speech.split(". ")
-        for i in random_speech_split:
-            if i.strip():
-                tts_speak_instant(i.strip())
-    time.sleep(2)
-    tts_speak_instant("After hearing this, how do you feel? ... If you have anything you would like to add, press the left button")
-    time.sleep(2)
-    oscClient.send_message("/musicTrig", True)
-    oscClient.send_message("/volume", 0.3)
-    write_serial("ledloff")
+    # speech_total = ""
+    # if random_speech and random_speech.strip():
+    #     random_speech_split = random_speech.split(". ")
+    #     for i in random_speech_split:
+    #         if i.strip():
+    #             speech_total += i.strip() + ". "
+    # tts_speak_queue(speech_total.strip())
+    tts_speak_instant(random_speech)
+
         
 
 def sr_save():
-    global listening, speech_data, file_name
+    global listening, speech_data, file_name, selected_emotion
     listening = False
 
     if not speech_data["speech"].strip():
@@ -395,19 +445,23 @@ def sr_save():
         return
 
     data = sr_load()
-    next_user_number = len(data)
+    
+    if not selected_emotion:
+        selected_emotion = random.choice(emotion_list)
+        
+    next_user_number = len(data[selected_emotion])
 
     new_speech_data = {
         "user": next_user_number,
         "speech": speech_data["speech"]
     }
 
-    data.append(new_speech_data)
+    data[selected_emotion].append(new_speech_data)
 
     with open(file_name, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
 
-    print(f"JSON updated: user {next_user_number}")
+    print(f"JSON updated: [{selected_emotion}] user {next_user_number}")
     speech_data["speech"] = ""
 
 def sr_respond():
@@ -430,6 +484,7 @@ def write_serial(cmd = ""):
 writeTh = th.Thread(target=write_serial, daemon=True)
 writeTh.start()
 write_serial("lighton")
+write_serial("ledoff")
 
 
 def read_serial():
@@ -791,6 +846,37 @@ def main():
 
 # if __name__ == "__main__":
 #     main() 
+
+
+def audio_play(file_index = 0):
+    global speaker_index, audio_file_folder,audio_file_list
+    
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    TARGET_FOLDER = os.path.join(current_dir, audio_file_folder)
+    
+    if file_index < 0 or file_index >= len(audio_file_list):
+        print("Audio file index, out of range")
+        return
+    AUDIO_FILE = audio_file_list[file_index]
+    play_audio_on_specific_device(TARGET_FOLDER, AUDIO_FILE, speaker_index)
+    
+
+def play_audio_on_specific_device(folder_path, file_name, device_index):
+    full_path  = os.path.join(folder_path, file_name)
+    if not os.path.exists(full_path):
+        print("File not found:", full_path)
+        return
+    try:
+        data, fs = sf.read(full_path)
+        sd.default.device = device_index
+        
+        sd.play(data,fs)
+        sd.wait()
+    except Exception as e:
+        print(f"Audio Play Error: {e}")
+    
+
+
     
 
 
@@ -803,6 +889,10 @@ def tts_speak_queue(text):
     tts_queue.put(text.strip())
     
 def tts_speak_instant(text):
+    global oscClient
+
+    # oscClient.send_message("/volume", 0.15)
+
     audio_segments = generate_speech_from_api(
         prompt=text
     )
@@ -814,3 +904,6 @@ while running:
         listening = False
         running = False
         break
+    
+    
+    

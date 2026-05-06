@@ -1,34 +1,39 @@
-[
-    {
-        "user": 0,
-        "speech": "i couldn't prepare a really nice breakfast this morning"
-    },
-    {
-        "user": 1,
-        "speech": "super hungry today i tripped on the curb and right now i'm super"
-    },
-    {
-        "user": 2,
-        "speech": "i'm worried about play testing after seeing other people's play tests"
-    },
-    {
-        "user": 3,
-        "speech": "my hand is really itchy i think of what seemed to be a mosquito bites but maybe it's something more serious than that cuz it's been like getting worse"
-    },
-    {
-        "user": 4,
-        "speech": "my favorite color is blue"
-    },
-    {
-        "user": 5,
-        "speech": "there's a dish of trader joe's orange chicken that i haven't cleaned for my room in 3 days bear song"
-    },
-    {
-        "user": 6,
-        "speech": "i couldn't have perfect breakfast this morning"
-    },
-    {
-        "user": 7,
-        "speech": "i didn't eat food today. not eating"
-    }
-]
+{
+    "happy": [
+        {
+            "user": 0,
+            "speech": "i finally made up with my friend after a long argument and i feel so relieved and grateful"
+        }
+    ],
+    "sad": [
+        {
+            "user": 0,
+            "speech": "i feel so lonely lately because i couldn't keep my promise to my family"
+        }
+    ],
+    "fear": [
+        {
+            "user": 0,
+            "speech": "i'm really terrified of the upcoming presentation because i haven't prepared enough"
+        }
+    ],
+    "disgust": [
+        {
+            "user": 0,
+            "speech": "i feel so ashamed that i threw away the food that my roommate carefully prepared for me"
+        }
+    ],
+    "surprise": [
+        {
+            "user": 0,
+            "speech": "i didn't expect to hear from my old friend after 5 years, it completely caught me off guard"
+        }
+    ],
+    "anger": [
+        {
+            "user": 0,
+            "speech": "i am still so frustrated that i let my anger ruin such an important opportunity"
+        }
+
+    ]
+}
