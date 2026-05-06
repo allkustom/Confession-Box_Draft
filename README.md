@@ -1,3 +1,10 @@
+# Library Requirements
+```
+pip3 install -r requirements.txt
+```
+
+
+
 # File path
 Main Python code on
 ```
