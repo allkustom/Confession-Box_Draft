@@ -7,6 +7,10 @@
         {
             "user": 1,
             "speech": "a time that i felt appreciated in love. my brother. show me food and fluid all the way to new york. can you do that i missed in and out. and he brought it all the way to new york from la. i'm on my brother brought in and out"
+        },
+        {
+            "user": 2,
+            "speech": "so. going to feel like. there's always someone who loved me and i would feel like motivated to always work and work again. affirmations so i think that kind of thing actually affect me more"
         }
     ],
     "sad": [
@@ -23,6 +27,10 @@
         {
             "user": 0,
             "speech": "i'm really terrified of the upcoming presentation because i haven't prepared enough"
+        },
+        {
+            "user": 1,
+            "speech": "i forgot the question"
         }
     ],
     "disgust": [

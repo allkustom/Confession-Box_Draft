@@ -390,8 +390,8 @@ def read_serial():
                 seq_start_trigger("door")
             elif readSer == "sit":
                 seq_start_trigger("sit")
-            elif readSer == "stand":
-                userSit = False
+            # elif readSer == "stand":
+            #     userSit = False
             
             if not waiting:                
                 if readSer == "interone":
