@@ -2,6 +2,7 @@ annotated-doc==0.0.4
 annotated-types==0.7.0
 anyio==4.13.0
 audioop-lts==0.2.2
+autoflake==2.3.3
 certifi==2026.2.25
 cffi==2.0.0
 charset-normalizer==3.4.7
@@ -46,6 +47,7 @@ PyAudio==0.2.14
 pycparser==3.0
 pydantic==2.13.0
 pydantic_core==2.46.0
+pyflakes==3.4.0
 Pygments==2.20.0
 pyobjc==12.1
 pyobjc-core==12.1
@@ -209,8 +211,6 @@ pyobjc-framework-VideoToolbox==12.1
 pyobjc-framework-Virtualization==12.1
 pyobjc-framework-Vision==12.1
 pyobjc-framework-WebKit==12.1
-PyQt5==5.15.11
-PyQt5-Qt5==5.15.18
 PyQt5_sip==12.18.0
 pyserial==3.5
 python-dotenv==1.2.2

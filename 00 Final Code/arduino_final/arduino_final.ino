@@ -7,7 +7,6 @@
 
 // Relay switch - D6
 
-
 const int buttonCount = 3;
 const int button[buttonCount] = {2,3,4};
 
@@ -24,7 +23,7 @@ String msg;
 
 bool isBlinking = false;
 long previousBlinkTime = 0;
-const long blinkInterval = 1000;
+const long blinkInterval = 500;
 
 void setup() {
   Serial.begin(115200);
@@ -155,7 +154,6 @@ void sendSerial(bool active, int index){
     }
   }
 
-
 }
 
 void ledControl(int index, bool activate){
@@ -165,4 +163,3 @@ void ledControl(int index, bool activate){
     digitalWrite(led[index], LOW);
   }
 }
-

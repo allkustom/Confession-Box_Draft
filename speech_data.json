@@ -3,12 +3,20 @@
         {
             "user": 0,
             "speech": "i finally made up with my friend after a long argument and i feel so relieved and grateful"
+        },
+        {
+            "user": 1,
+            "speech": "a time that i felt appreciated in love. my brother. show me food and fluid all the way to new york. can you do that i missed in and out. and he brought it all the way to new york from la. i'm on my brother brought in and out"
         }
     ],
     "sad": [
         {
             "user": 0,
             "speech": "i feel so lonely lately because i couldn't keep my promise to my family"
+        },
+        {
+            "user": 1,
+            "speech": "i remember. i felt really hurt when. my brother my older brother had said some really hurtful things to me. i felt hurt because the fact that. not so much and and the things he said about me. but i fear that maybe. sing about me that maybe i didn't see. i felt betrayed because. raise volume in his inputs the most. what's the time and in that moment. to this day i still think about them. thanks for sharing your feelings"
         }
     ],
     "fear": [
@@ -21,12 +29,20 @@
         {
             "user": 0,
             "speech": "i feel so ashamed that i threw away the food that my roommate carefully prepared for me"
+        },
+        {
+            "user": 1,
+            "speech": "when i was in school for computer science. i was around nobody that i knew. play so i didn't know. and i really showed me. meant to be in the future"
         }
     ],
     "surprise": [
         {
             "user": 0,
             "speech": "i didn't expect to hear from my old friend after 5 years, it completely caught me off guard"
+        },
+        {
+            "user": 1,
+            "speech": "it made me feel. i had to let go a part of my ego. because. i felt that i was better but i was proven wrong"
         }
     ],
     "anger": [
@@ -34,6 +50,5 @@
             "user": 0,
             "speech": "i am still so frustrated that i let my anger ruin such an important opportunity"
         }
-
     ]
 }

@@ -16,6 +16,7 @@ import argparse
 import asyncio
 from pythonosc import udp_client
 
+
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -188,12 +189,12 @@ def seq_start_trigger(case):
     
     if doorClosed and userSit:
         if waiting:
+            print("Seq start")
+            waiting = False
             seq_start()
-        waiting = False
-        print("Seq start")
         
-    else:
-        waiting = True
+    # else:
+    #     waiting = True
 
 def seq_start():
     global oscClient, selected_emotion, emotion_list
@@ -208,12 +209,12 @@ def seq_start():
 
     sr_random_speech()
     time.sleep(5)
-    write_serial("leddefault")
     audio_play(0)
-    time.sleep(2)
+    # time.sleep(2)
     oscClient.send_message("/volume", music_volume_min)
     target_audio_index = emotion_list.index(selected_emotion) + 2
     audio_play(target_audio_index)
+    write_serial("leddefault")
     time.sleep(2)
     oscClient.send_message("/volume", music_volume_default)
     
@@ -258,7 +259,8 @@ def sr_toggle():
         print("Confession Record Start")
         print("-----------------------")
     else:
-        write_serial("leddefault")
+        # write_serial("leddefault")
+        write_serial("ledoff")
         print("-----------------------")
         print("Confession Record End")
         print("-----------------------")
@@ -301,7 +303,8 @@ def sr_random_speech():
     
     full_data = sr_load()
     
-    if not selected_emotion not in full_data:
+    if not selected_emotion or selected_emotion not in full_data:
+        print("Selected emotion not found in data")
         return None
         
     data = full_data[selected_emotion]
@@ -323,8 +326,10 @@ def sr_random_speech():
     random_speech = data[random_number].get("speech", "").strip()
     
     if not random_speech:
+        print("Speech is empty")
         return
     
+    print("Playing random speech:", random_speech)
     tts_speak_instant(random_speech)
 
         

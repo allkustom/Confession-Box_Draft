@@ -1,4 +1,4 @@
-# Library Requirements
+# Isntall Dependencies
 ```
 pip3 install -r requirements.txt
 ```
