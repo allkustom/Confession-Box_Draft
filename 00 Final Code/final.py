@@ -118,6 +118,7 @@ waiting = True
 doorClosed = False
 userSit = False
 listening = False
+allow_button = False
 
 
 last_text = ""
@@ -197,7 +198,7 @@ def seq_start_trigger(case):
     #     waiting = True
 
 def seq_start():
-    global oscClient, selected_emotion, emotion_list
+    global oscClient, selected_emotion, emotion_list, allow_button
 
     write_serial("lightoff")
     time.sleep(3)
@@ -217,6 +218,7 @@ def seq_start():
     write_serial("leddefault")
     time.sleep(2)
     oscClient.send_message("/volume", music_volume_default)
+    allow_button = True
     
     
 def seq_reset():
@@ -248,28 +250,30 @@ def seq_reset():
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # Toggle the speech recognition on/off when the left button is pressed, and save the confession data when toggled off
 def sr_toggle():
-    global listening , last_text, speech_data, oscClient
-    
-    listening = not listening
+    global listening , last_text, speech_data, oscClient, allow_button
 
-    if listening:
-        oscClient.send_message("/volume", music_volume_min)
-        write_serial("ledblink")
-        print("-----------------------")
-        print("Confession Record Start")
-        print("-----------------------")
-    else:
-        # write_serial("leddefault")
-        write_serial("ledoff")
-        print("-----------------------")
-        print("Confession Record End")
-        print("-----------------------")
-        time.sleep(3)
-        oscClient.send_message("/volume", music_volume_mid)
-        audio_play(1)
-        time.sleep(1)
-        oscClient.send_message("/musicTrig", True)
-        oscClient.send_message("/volume", music_volume_default)
+    if allow_button:        
+        listening = not listening
+
+        if listening:
+            oscClient.send_message("/volume", music_volume_min)
+            write_serial("ledblink")
+            print("-----------------------")
+            print("Confession Record Start")
+            print("-----------------------")
+        else:
+            # write_serial("leddefault")
+            write_serial("ledoff")
+            allow_button = False;
+            print("-----------------------")
+            print("Confession Record End")
+            print("-----------------------")
+            time.sleep(3)
+            oscClient.send_message("/volume", music_volume_mid)
+            audio_play(1)
+            time.sleep(1)
+            oscClient.send_message("/musicTrig", True)
+            oscClient.send_message("/volume", music_volume_default)
 
 # Load the speech data
 def sr_load():
